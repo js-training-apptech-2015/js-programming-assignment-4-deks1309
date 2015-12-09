@@ -7,11 +7,12 @@ implementation to use based on:
 2. arguments' types
 */
 function ObjectWithMethodOverloading() {
-
-    this.functions = [];
+    var functions = [];
 
     this.overload = function (nameNewFunc, func, argTypes) {
-        var obj = this;
+        var obj = this;       
+        var DEFAULT = 'unknown';
+
         if (typeof (func) === 'function') {
 
             if (argTypes) {
@@ -21,27 +22,27 @@ function ObjectWithMethodOverloading() {
                 }
                 argTypes = param.substr(0, param.length - 1);
             } else {
-                argTypes = 'unknow';
+                argTypes = DEFAULT;
             }
 
-            obj.functions[func.length] = obj.functions[func.length] || [];
-
-            obj.functions[func.length][argTypes] = func;
+            functions[func.length] = functions[func.length] || [];
+            functions[func.length][argTypes] = func;
 
             obj[nameNewFunc] = function () {
                 var param = "";
+
                 for (var i = 0; i < arguments.length; i++) {
                     param += (typeof(arguments[i])).toLowerCase() + ",";
                 }
                 param = param.substr(0, param.length - 1);
-                if (obj.functions[arguments.length][param]) {
-                    return obj.functions[arguments.length][param].apply(this, arguments);
-                } else if (obj.functions[arguments.length]['unknow']) {
-                    return obj.functions[arguments.length]['unknow'].apply(this, arguments);
-                }
 
+                if (functions[arguments.length][param]) {
+                    return functions[arguments.length][param].apply(this, arguments);
+                } else if (functions[arguments.length][DEFAULT]) {
+                    return functions[arguments.length][DEFAULT].apply(this, arguments);
+                };
             }
         }
-    }
 
+    }
 }

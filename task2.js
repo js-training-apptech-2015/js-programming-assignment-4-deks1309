@@ -6,6 +6,7 @@ that gets executed when all the dependencies are loaded
 function define() {
     var dependencies;
     var callback;
+    window.loadedModules = window.loadedModules || [];
 
     if (typeof(arguments[0]) === 'function') {
         callback = arguments[0];
@@ -15,10 +16,8 @@ function define() {
     } else {
         dependencies = arguments[0];
         callback = arguments[1];
-        var promises = [];
-        dependencies.forEach(function (nameFile) {
-            promises.push(loadJSFile(nameFile));
-        });
+
+        var promises = dependencies.map(loadJSFile);
 
         Promise.all(promises)
             .then(function (results) {
@@ -35,20 +34,28 @@ function define() {
 
     //Function loads .js file
     function loadJSFile(nameFile) {
+
         return new Promise(function (resolve, reject) {
-            var script = document.createElement('script');
-            script.src = nameFile;
+            var unique = window.loadedModules.find((el) => (el === nameFile)) ? false : true;
             var nameModule = nameFile.split('/').pop().split('.')[0];
 
-            script.addEventListener('load', function () {
+            if (unique) {
+                var script = document.createElement('script');
+                script.src = nameFile;
+                
+                window.loadedModules.push(nameFile);
+                script.addEventListener('load', function () {
+                    resolve(nameModule);
+                }, false);
+
+                script.addEventListener('error', function () {
+                    reject(nameModule);
+                }, false);
+
+                document.head.appendChild(script);
+            } else {
                 resolve(nameModule);
-            }, false);
-
-            script.addEventListener('error', function () {
-                reject(nameModule);
-            }, false);
-
-            document.head.appendChild(script);
+            }
         });
     }
 }
